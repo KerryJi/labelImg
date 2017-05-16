@@ -57,6 +57,8 @@ def addActions(widget, actions):
 def labelValidator():
     return QRegExpValidator(QRegExp(r'^[^ \t].+'), None)
 
+def distanceValidator():
+    return QDoubleValidator(0.0, 100.0, 2, None)
 
 class struct(object):
 

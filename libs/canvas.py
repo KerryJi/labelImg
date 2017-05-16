@@ -559,6 +559,14 @@ class Canvas(QWidget):
         self.shapes[-1].label = text
         return self.shapes[-1]
 
+    def setLastDistance(self, distance):
+     #   assert text
+        if distance:
+          self.shapes[-1].distance = distance
+        else:
+          self.shapes[-1].distance = 0
+        return self.shapes[-1]
+
     def undoLastLine(self):
         assert self.shapes
         self.current = self.shapes.pop()

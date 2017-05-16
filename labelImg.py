@@ -24,7 +24,7 @@ except ImportError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
-import resources
+#import resources
 # Add internal libs
 dir_name = os.path.abspath(os.path.dirname(__file__))
 libs_path = os.path.join(dir_name, 'libs')
@@ -599,9 +599,13 @@ class MainWindow(QMainWindow, WindowMixin):
         if not self.canvas.editing():
             return
         item = item if item else self.currentItem()
-        text = self.labelDialog.popUp(item.text())
+        shape =self.itemsToShapes[item]
+        label = shape.label
+        distance = shape.distance
+        (text, distance) = self.labelDialog.popUp(label,distance)
         if text is not None:
             item.setText(text)
+            self.itemsToShapes[item].distance = distance
             self.setDirty()
 
     # Tzutalin 20160906 : Add file list and dock to move faster
@@ -676,11 +680,12 @@ class MainWindow(QMainWindow, WindowMixin):
 
     def loadLabels(self, shapes):
         s = []
-        for label, points, line_color, fill_color, difficult in shapes:
+        for label, points, line_color, fill_color, difficult, distance in shapes:
             shape = Shape(label=label)
             for x, y in points:
                 shape.addPoint(QPointF(x, y))
             shape.difficult = difficult
+            shape.distance = distance
             shape.close()
             s.append(shape)
             self.addLabel(shape)
@@ -706,7 +711,8 @@ class MainWindow(QMainWindow, WindowMixin):
                         if s.fill_color != self.fillColor else None,
                         points=[(p.x(), p.y()) for p in s.points],
                        # add chris
-                        difficult = s.difficult)
+                        difficult = s.difficult,
+                        distance = s.distance)
 
         shapes = [format_shape(shape) for shape in self.canvas.shapes]
         # Can add differrent annotation formats here
@@ -757,12 +763,14 @@ class MainWindow(QMainWindow, WindowMixin):
             self.labelDialog = LabelDialog(
                 parent=self, listItem=self.labelHist)
 
-        text = self.labelDialog.popUp(text=self.prevLabelText)
+        (text, distance)= self.labelDialog.popUp(text=self.prevLabelText)
         # Add Chris
         self.diffcButton.setChecked(False)
         if text is not None:
             self.prevLabelText = text
-            self.addLabel(self.canvas.setLastLabel(text))
+            label = self.canvas.setLastLabel(text)
+            self.canvas.setLastDistance(distance)
+            self.addLabel(label)
             if self.beginner():  # Switch to edit mode.
                 self.canvas.setEditing(True)
                 self.actions.create.setEnabled(True)
